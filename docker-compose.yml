@@ -42,7 +42,7 @@ services:
     networks:
       - kafka-network
 
-  user-login-consumer:
+  user-login-processor:
     build:
       context: .
       dockerfile: Dockerfile
@@ -52,6 +52,7 @@ services:
     environment:
       BOOTSTRAP_SERVERS: kafka:9092
       KAFKA_TOPIC: user-login
+      PROCESSED_TOPIC: user-login-processed
     networks:
       - kafka-network
 

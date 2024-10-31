@@ -12,7 +12,7 @@ from helpers import (
 # Environment variables from docker-compose.yml
 BOOTSTRAP_SERVERS = os.environ.get('BOOTSTRAP_SERVERS')
 CONSUMER_TOPIC = os.environ.get('KAFKA_TOPIC')
-PROCESSED_TOPIC = 'user-login-processed'
+PROCESSED_TOPIC = os.environ.get('PROCESSED_TOPIC')
 
 # Set up Kafka consumer and producer
 consumer = KafkaConsumer(
@@ -28,8 +28,8 @@ producer = KafkaProducer(
 
 # Aggregation variables
 last_publish_time = time()
-interval_messages = 0
-total_messages = 0
+interval_messages_consumed = 0
+total_messages_consumed = 0
 interval_device_type_count = {}
 total_device_type_count = {}
 interval_missing_field_count = {}
@@ -40,8 +40,8 @@ for message in consumer:
     data = message.value
 
     # Process and track data
-    interval_messages += 1
-    total_messages += 1
+    interval_messages_consumed += 1
+    total_messages_consumed += 1
     process_message(
         data,
         interval_device_type_count,
@@ -56,8 +56,8 @@ for message in consumer:
         aggregated_data = prepare_aggregated_data(
             last_publish_time,
             current_time,
-            interval_messages,
-            total_messages, 
+            interval_messages_consumed,
+            total_messages_consumed, 
             interval_device_type_count,
             total_device_type_count, 
             interval_missing_field_count,
@@ -68,12 +68,9 @@ for message in consumer:
         producer.send(PROCESSED_TOPIC, value=aggregated_data)
         print(f"Produced message: {aggregated_data}")
         
-        # Small delay for readability in testing environments
-        sleep(1)
-        
         # Reset interval data and update publish time
         reset_interval_data(interval_device_type_count, interval_missing_field_count)
-        interval_messages = 0
+        interval_messages_consumed = 0
         last_publish_time = current_time
 
 
